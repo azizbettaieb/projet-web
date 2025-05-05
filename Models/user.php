@@ -8,6 +8,7 @@ class User {
     private $role;
     private $statusCompte;
     private $photo;
+    public $twofa_secret;
     
 
     // Constructor
@@ -92,6 +93,13 @@ class User {
 
     public function setPhoto($photo) {
         $this->photo = $photo;
+    }
+    public function getTwofaSecret() {
+        return $this->twofa_secret ;
+    }
+    
+    public function setTwofaSecret($secret) {
+        $this->twofa_secret  = $twofa_secret ;
     }
 }
 ?>

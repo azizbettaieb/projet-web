@@ -1,7 +1,7 @@
 <?php
 include 'C:\xampp\htdocs\web\db.php';
 include 'C:\xampp\htdocs\web\Models\user.php';
-
+require_once 'C:\xampp\htdocs\web\GoogleAuthenticator.php';
 class UserController {
     private $pdo;
 
@@ -54,40 +54,59 @@ class UserController {
         $stmt = $this->pdo->prepare("DELETE FROM utilisateur WHERE id = ?");
         return $stmt->execute([$id]);
     }
-    
-    public function login($email, $password) {
-        // Préparation de la requête pour récupérer l'utilisateur
+
+    public function login($email, $password, $otp = null) {
         $stmt = $this->pdo->prepare("SELECT * FROM utilisateur WHERE email = ?");
         $stmt->execute([$email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
-        // Vérification si l'utilisateur existe et si le mot de passe est correct
         if ($user && password_verify($password, $user['password'])) {
-            // Création de la session pour l'utilisateur connecté
+            // If 2FA is enabled
+            if (!empty($user['twofa_secret'])) {
+                if (!$otp) {
+                    session_start();
+                    $_SESSION['pending_user'] = $user;
+                    header("Location: ../FrontOffice/verify2fa.php");
+                    exit();
+                }
+    
+                $gAuth = new PHPGangsta_GoogleAuthenticator();
+                $checkResult = $gAuth->verifyCode($user['twofa_secret'], $otp, 2);
+                if (!$checkResult) {
+                    header("Location: ../FrontOffice/login.php?error=otp_failed");
+                    exit();
+                }
+            }
+    
             session_start();
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_name'] = $user['name'];
-            $_SESSION['user_role'] = $user['role'];
             $_SESSION['user_email'] = $user['email'];
-            $_SESSION['user_lastname'] = $user['lastName']; 
+            $_SESSION['user_role'] = $user['role'];
+            $_SESSION['user_lastname'] = $user['lastName'];
             $_SESSION['photo'] = $user['photo'];
             $_SESSION['statuscompte'] = $user['statuscompte'];
-
-
     
-            // Redirection en fonction du rôle de l'utilisateur
             if ($_SESSION['user_role'] == 1) {
-                header("Location: ../../Views/backOffice/app-profile.php");  // Redirection vers le back-office
+                header("Location: ../../Views/backOffice/app-profile.php");
             } else {
-                header("Location: ../frontOffice/profile.php");  // Redirection vers le front-office
+                header("Location: ../FrontOffice/profile.php");
             }
-            exit();  // Assurez-vous que le script s'arrête après la redirection
-        } else {
-            // Redirection en cas d'erreur d'authentification avec un message d'erreur
-            header("Location: ../FrontOffice/login.php");
             exit();
         }
+    
+        header("Location: ../FrontOffice/login.php?error=login_failed");
     }
+    
+    public function disable2FA($userId) {
+    // Remove the 2FA secret from the database
+    $stmt = $this->pdo->prepare("UPDATE utilisateur SET twofa_secret = NULL WHERE id = ?");
+    $stmt->execute([$userId]);
+
+    // You can also handle any session variables or redirection after disabling 2FA
+    return true;
+}
+
     
 public function logout() {
     session_start();
@@ -109,6 +128,22 @@ public function logout() {
     
     header("Location: ../FrontOffice/login.php");
 }
+
+
+public function enable2FA($userId) {
+    $gAuth = new PHPGangsta_GoogleAuthenticator();
+    $secret = $gAuth->createSecret();
+
+    // Save to DB
+    $stmt = $this->pdo->prepare("UPDATE utilisateur SET twofa_secret = ? WHERE id = ?");
+    $stmt->execute([$secret, $userId]);
+
+    // Generate QR Code URL
+    $qrCodeUrl = $gAuth->getQRCodeGoogleUrl('MyAppName', $secret);
+
+    return $qrCodeUrl;
+}
+
 }
 
 ?>

@@ -1,9 +1,11 @@
 <?php
 session_start();
-
-require_once '../../Controllers/usercontroller.php';
-$controller = new UserController($pdo);
+if (!isset($_SESSION['pending_user'])) {
+    header('Location: login.php');
+    exit();
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -117,72 +119,25 @@ $controller = new UserController($pdo);
 <!-- Navbar End -->
 
 
-    <!-- Offer Start -->
-    <div class="container-fluid bg-offer my-5 py-5">
-        <div class="container py-5">
-            <div class="row gx-5 justify-content-start">
-                <div class="col-lg-7">
-                    <div class="border-start border-5 border-dark ps-5 mb-5">
-                        <h1 class="display-5 text-uppercase text-white mb-0"> profile</h1>
-                    </div>
-                    <h2 class="text-white mb-4">connect to do your purchases at best prices !</h4>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Offer End -->
+<div class="bg-light text-center pt-4">
+                        <h2 class="text-uppercase">enter 2 factor authentication code</h2>
+<form method="post" action="process_otp.php">
+                            <div class="text-center bg-dark p-4 mb-2">
+                                <h1 class="display-4 text-white mb-0">
+                                    <small class="align-top"
+                                        style="font-size: 22px; line-height: 45px;">Enter the 6-digit code from Google Authenticator:</small>
+                                        <div class="input-group">
+                                        <input class="form-control p-3"  type="text" name="otp" required>
+                                        </div>
+                                </h1>
+                            </div>
+                        
+                            <button class="btn btn-primary py-3 px-5" type="submit" id="sendMessageButton"> Verify</button>
 
-
-    <!-- Pricing Plan Start -->
-    <div class="container-fluid py-5">
-        <div class="container">
-     
-            <div class="row gx-0">
-                <div class="col-lg-4">
-              
-                </div>
-                <div class="col-lg-7">
-                <div class="bg-light text-center pt-4">
-                        <h2 class="text-uppercase">profile</h2>
-                        <h6 class="text-body mb-5">voici vos donnees</h6>
-                <?php if (isset($_SESSION['user_id'])) {?>
-                  
-                    <?php if ($_SESSION['photo']): ?>
-        <img src="../uploads/<?php echo $_SESSION['photo']; ?>" alt="Photo de profil" width="450 ">
-    <?php else: ?>
-        <h5 class="text-white mb-3">   Pas de photo </h5>
-    <?php endif; ?>
-                                <a class="blog-overlay text-decoration-none" href="logout.php" onclick="return confirm('do you want to logout?')">
-                                    <h5 class="text-black mb-3"><strong>Email: </strong><?php echo $_SESSION['user_email']; ?></h5>
-                                    <h5 class="text-black mb-3"><strong>nom: </strong><?php echo $_SESSION['user_name']; ?></h5>
-                                    <h5 class="text-black mb-3"><strong>prenom: </strong><?php echo $_SESSION['user_lastname']; ?></h5>
-                                    <br></br>
-                                    <a class="btn btn-primary py-2 px-4 ml-3     d-none d-lg-block" href="enable2fa.php">enable 2fa</a> 
-                                    <br></br> 
-            
-                                    <a class="btn btn-primary py-2 px-4 ml-3     d-none d-lg-block" href="logout.php">logout</a>  
-
-                                    <form action="disable2fa.php" method="POST">
-                                    <br></br>
-    <button type="submit" name="disable_2fa" class="btn btn-danger">Disable 2FA</button>
-</form>
-                                  
-                                </a>
-                                            
-<br></br>
-              
-                        <?php }?>
-                    </div>
-                </div>
-                </div>  
-            </div>
-        </div>
-    </div>
-    <!-- Pricing Plan End -->
-
-
- 
-    
+                                                </div>      
+                                                
+                        </form>
+                        </div>  
 
     <!-- Footer Start -->
     <div class="container-fluid bg-light mt-5 py-5">

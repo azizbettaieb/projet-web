@@ -1,8 +1,23 @@
 <?php
 session_start();
+require_once '../../db.php';
+require_once '../../GoogleAuthenticator.php';
+require_once '../../Controllers/UserController.php';
 
-require_once '../../Controllers/usercontroller.php';
+// Ensure the user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+$userId = $_SESSION['user_id'];
+
+// Create controller
 $controller = new UserController($pdo);
+
+// Generate the QR code URL for Google Authenticator
+$qrCodeUrl = $controller->enable2FA($userId);
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -115,74 +130,15 @@ $controller = new UserController($pdo);
     </div>
 </nav>
 <!-- Navbar End -->
+    <h2>Enable Google Authenticator</h2>
+    <p>Scan the QR code below using your Google Authenticator app:</p>
+    <img src="<?php echo $qrCodeUrl; ?>" alt="QR Code">
 
+    <p>Once scanned, next time you log in you'll be asked for a 6-digit code.</p>
+    <a href="profile.php">Back to Profile</a>
+</body>
+</html>
 
-    <!-- Offer Start -->
-    <div class="container-fluid bg-offer my-5 py-5">
-        <div class="container py-5">
-            <div class="row gx-5 justify-content-start">
-                <div class="col-lg-7">
-                    <div class="border-start border-5 border-dark ps-5 mb-5">
-                        <h1 class="display-5 text-uppercase text-white mb-0"> profile</h1>
-                    </div>
-                    <h2 class="text-white mb-4">connect to do your purchases at best prices !</h4>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Offer End -->
-
-
-    <!-- Pricing Plan Start -->
-    <div class="container-fluid py-5">
-        <div class="container">
-     
-            <div class="row gx-0">
-                <div class="col-lg-4">
-              
-                </div>
-                <div class="col-lg-7">
-                <div class="bg-light text-center pt-4">
-                        <h2 class="text-uppercase">profile</h2>
-                        <h6 class="text-body mb-5">voici vos donnees</h6>
-                <?php if (isset($_SESSION['user_id'])) {?>
-                  
-                    <?php if ($_SESSION['photo']): ?>
-        <img src="../uploads/<?php echo $_SESSION['photo']; ?>" alt="Photo de profil" width="450 ">
-    <?php else: ?>
-        <h5 class="text-white mb-3">   Pas de photo </h5>
-    <?php endif; ?>
-                                <a class="blog-overlay text-decoration-none" href="logout.php" onclick="return confirm('do you want to logout?')">
-                                    <h5 class="text-black mb-3"><strong>Email: </strong><?php echo $_SESSION['user_email']; ?></h5>
-                                    <h5 class="text-black mb-3"><strong>nom: </strong><?php echo $_SESSION['user_name']; ?></h5>
-                                    <h5 class="text-black mb-3"><strong>prenom: </strong><?php echo $_SESSION['user_lastname']; ?></h5>
-                                    <br></br>
-                                    <a class="btn btn-primary py-2 px-4 ml-3     d-none d-lg-block" href="enable2fa.php">enable 2fa</a> 
-                                    <br></br> 
-            
-                                    <a class="btn btn-primary py-2 px-4 ml-3     d-none d-lg-block" href="logout.php">logout</a>  
-
-                                    <form action="disable2fa.php" method="POST">
-                                    <br></br>
-    <button type="submit" name="disable_2fa" class="btn btn-danger">Disable 2FA</button>
-</form>
-                                  
-                                </a>
-                                            
-<br></br>
-              
-                        <?php }?>
-                    </div>
-                </div>
-                </div>  
-            </div>
-        </div>
-    </div>
-    <!-- Pricing Plan End -->
-
-
- 
-    
 
     <!-- Footer Start -->
     <div class="container-fluid bg-light mt-5 py-5">

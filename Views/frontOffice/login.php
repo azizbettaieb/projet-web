@@ -1,5 +1,4 @@
 <?php
-
 session_start();
 
 include 'C:\xampp\htdocs\web\db.php';
@@ -9,30 +8,32 @@ $controller = new UserController($pdo);
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-// Your reCAPTCHA secret key
-$secretKey = "6LdyiZIqAAAAAOP54s2U3-rAdVNoAicFRAy0SWZj";
-    
-// The reCAPTCHA response from the form
-$recaptchaResponse = $_POST['g-recaptcha-response'];
+    $secretKey = "6LdyiZIqAAAAAOP54s2U3-rAdVNoAicFRAy0SWZj";
+    $recaptchaResponse = $_POST['g-recaptcha-response'];
 
-// Verify reCAPTCHA response with Google
-$verifyUrl = "https://www.google.com/recaptcha/api/siteverify";
-$response = file_get_contents($verifyUrl . "?secret=" . $secretKey . "&response=" . $recaptchaResponse);
-$responseKeys = json_decode($response, true);
+    $verifyUrl = "https://www.google.com/recaptcha/api/siteverify?secret=" . urlencode($secretKey) . "&response=" . urlencode($recaptchaResponse);
+    $response = file_get_contents($verifyUrl);
 
-// Check if reCAPTCHA verification was successful
-if (intval($responseKeys["success"]) !== 1) {
-    echo "reCAPTCHA verification failed. Please try again.";
-} else {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
+    if ($response !== false) {
+        $responseKeys = json_decode($response, true);
 
-    $controller->login($email,$password);
+        if (isset($responseKeys['success']) && $responseKeys['success'] === true) {
+            $email = $_POST['email'] ?? '';
+            $password = $_POST['password'] ?? '';
 
-       
-}
+            $loginSuccess = $controller->login($email, $password);
+            if (!$loginSuccess) {
+                $error = "Invalid email or password.";
+            }
+        } else {
+            $error = "reCAPTCHA verification failed. Please try again.";
+        }
+    } else {
+        $error = "Unable to verify reCAPTCHA. Please check your internet connection.";
     }
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -171,6 +172,12 @@ if (intval($responseKeys["success"]) !== 1) {
               
                 </div>
                 <div class="col-lg-7">
+                <?php if (!empty($error)): ?>
+    <div class="alert alert-danger text-center">
+        <?php echo htmlspecialchars($error); ?>
+    </div>
+<?php endif; ?>
+
                 <?php if (!isset($_SESSION['user_id'])) {?>
                     <div class="bg-light text-center pt-4">
                         <h2 class="text-uppercase">Login</h2>
