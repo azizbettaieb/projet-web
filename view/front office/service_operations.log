@@ -1,0 +1,6 @@
+[2025-05-12 03:29:56] User 1 accessing services page
+[2025-05-12 03:29:56] Filtering params: Page=2, Eco=all, Search='', Sort=, Order=asc
+[2025-05-12 03:29:56] Fetched fresh services for user 1
+[2025-05-12 03:30:06] User 1 accessing services page
+[2025-05-12 03:30:06] Filtering params: Page=1, Eco=all, Search='', Sort=, Order=asc
+[2025-05-12 03:30:06] Fetched fresh services for user 1
